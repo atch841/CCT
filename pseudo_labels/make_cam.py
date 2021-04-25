@@ -8,8 +8,10 @@ import numpy as np
 import importlib
 import os
 
-import voc12.dataloader
+import voc12#.dataloader
 from misc import torchutils, imutils
+from dataset import LiTS_dataset
+
 
 cudnn.enabled = True
 
@@ -33,7 +35,7 @@ def _work(process_id, model, dataset, args):
             strided_up_size = imutils.get_strided_up_size(size, 16)
 
             outputs = [model(img[0].cuda(non_blocking=True))
-                       for img in pack['img']]
+                       for img in pack['image']]
 
             strided_cam = torch.sum(torch.stack(
                 [F.interpolate(torch.unsqueeze(o, 0), strided_size, mode='bilinear', align_corners=False)[0] for o
@@ -66,8 +68,10 @@ def run(args):
 
     n_gpus = torch.cuda.device_count()
 
-    dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
-                                                             voc12_root=args.voc12_root, scales=args.cam_scales)
+    # dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
+    #                                                          voc12_root=args.voc12_root, scales=args.cam_scales)
+    dataset = LiTS_dataset('/home/viplab/nas/train5/', 'train', 
+                            tumor_only=True)
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print('[ ', end='')

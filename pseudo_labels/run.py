@@ -8,9 +8,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Environment
-    parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
-    parser.add_argument("--voc12_root", required=True, type=str, 
-                        help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
+    parser.add_argument("--num_workers", default=os.cpu_count() - 2, type=int)
+    # parser.add_argument("--voc12_root", required=True, type=str, 
+    #                     help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
 
     # Dataset
     parser.add_argument("--train_list", default="voc12/train_aug.txt", type=str)
@@ -22,9 +22,9 @@ if __name__ == '__main__':
     # Class Activation Map
     parser.add_argument("--cam_network", default="net.resnet50_cam", type=str)
     parser.add_argument("--cam_crop_size", default=512, type=int)
-    parser.add_argument("--cam_batch_size", default=16, type=int)
-    parser.add_argument("--cam_num_epoches", default=5, type=int)
-    parser.add_argument("--cam_learning_rate", default=0.1, type=float)
+    parser.add_argument("--cam_batch_size", default=100, type=int)
+    parser.add_argument("--cam_num_epoches", default=50, type=int)
+    parser.add_argument("--cam_learning_rate", default=0.01, type=float)
     parser.add_argument("--cam_weight_decay", default=1e-4, type=float)
     parser.add_argument("--cam_eval_thres", default=0.15, type=float)
     parser.add_argument("--cam_scales", default=(1.0, 0.5, 1.5, 2.0), help="Multi-scale inferences")
