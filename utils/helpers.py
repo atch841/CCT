@@ -25,6 +25,23 @@ class DeNormalize(object):
         for t, m, s in zip(tensor, self.mean, self.std):
             t.mul_(s).add_(m)
         return tensor
+class DeNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor):
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+        return tensor
+class DeNormalize1(object):
+    def __init__(self):
+        pass
+
+    def __call__(self, tensor):
+        tensor += tensor.min()
+        tensor /= tensor.max()
+        return tensor
 
 
 def dir_exists(path):

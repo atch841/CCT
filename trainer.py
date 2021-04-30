@@ -11,7 +11,7 @@ from utils.helpers import colorize_mask
 from utils.metrics import eval_metrics, AverageMeter
 from tqdm import tqdm
 from PIL import Image
-from utils.helpers import DeNormalize
+from utils.helpers import DeNormalize1
 
 
 
@@ -24,7 +24,8 @@ class Trainer(BaseTrainer):
         self.unsupervised_loader = unsupervised_loader
         self.val_loader = val_loader
 
-        self.ignore_index = self.val_loader.dataset.ignore_index
+        # self.ignore_index = self.val_loader.dataset.ignore_index
+        self.ignore_index = None
         self.wrt_mode, self.wrt_step = 'train_', 0
         self.log_step = config['trainer'].get('log_per_iter', int(np.sqrt(self.val_loader.batch_size)))
         if config['trainer']['log_per_iter']:
@@ -35,7 +36,7 @@ class Trainer(BaseTrainer):
 
         # TRANSORMS FOR VISUALIZATION
         self.restore_transform = transforms.Compose([
-            DeNormalize(self.val_loader.MEAN, self.val_loader.STD),
+            DeNormalize1(),
             transforms.ToPILImage()])
         self.viz_transform = transforms.Compose([
             transforms.Resize((400, 400)),
@@ -125,7 +126,7 @@ class Trainer(BaseTrainer):
                 output = output[:, :, :H, :W]
 
                 # LOSS
-                loss = F.cross_entropy(output, target, ignore_index=self.ignore_index)
+                loss = F.cross_entropy(output, target)
                 total_loss_val.update(loss.item())
 
                 correct, labeled, inter, union = eval_metrics(output, target, self.num_classes, self.ignore_index)
@@ -272,13 +273,22 @@ class Trainer(BaseTrainer):
 
     def _add_img_tb(self, val_visual, wrt_mode):
         val_img = []
-        palette = self.val_loader.dataset.palette
+        # palette = self.val_loader.dataset.palette
+        # print(len(val_visual))
         for imgs in val_visual:
             imgs = [self.restore_transform(i) if (isinstance(i, torch.Tensor) and len(i.shape) == 3) 
-                        else colorize_mask(i, palette) for i in imgs]
+                        else Image.fromarray( i , 'L') for i in imgs]
+            # imgs = []
+            # for i in imgs:
+            #     if (isinstance(i, torch.Tensor) and len(i.shape) == 3):
+            #         imgs.append(self.restore_transform(i))
+            #     else:
+            #         imgs.append(Image.fromarray( i , 'L'))
+            #         # imgs.append(colorize_mask(i, palette))
             imgs = [i.convert('RGB') for i in imgs]
             imgs = [self.viz_transform(i) for i in imgs]
             val_img.extend(imgs)
+        # print(len(val_img), val_img[0].shape)
         val_img = torch.stack(val_img, 0)
         val_img = make_grid(val_img.cpu(), nrow=val_img.size(0)//len(val_visual), padding=5)
         self.writer.add_image(f'{wrt_mode}/inputs_targets_predictions', val_img, self.wrt_step)

@@ -27,8 +27,9 @@ class consistency_weight(object):
         return self.final_w * self.current_rampup
 
 
-def CE_loss(input_logits, target_targets, ignore_index, temperature=1):
-    return F.cross_entropy(input_logits/temperature, target_targets, ignore_index=ignore_index)
+def CE_loss(input_logits, target_targets, ignore_index=None, temperature=1):
+    # print(input_logits.shape, target_targets.shape, input_logits.max(), target_targets.max())
+    return F.cross_entropy(input_logits/temperature, target_targets)
 
 # for FocalLoss
 def softmax_helper(x):
@@ -110,7 +111,7 @@ class FocalLoss(nn.Module):
             logit = logit.view(-1, logit.size(-1))
         target = torch.squeeze(target, 1)
         target = target.view(-1, 1)
-	
+    
         alpha = self.alpha
 
         if alpha is None:
@@ -119,7 +120,7 @@ class FocalLoss(nn.Module):
             assert len(alpha) == num_class
             alpha = torch.FloatTensor(alpha).view(num_class, 1)
             alpha = alpha / alpha.sum()
-	    alpha = 1/alpha # inverse of class frequency
+            alpha = 1/alpha # inverse of class frequency
         elif isinstance(alpha, float):
             alpha = torch.ones(num_class, 1)
             alpha = alpha * (1 - self.alpha)
@@ -134,9 +135,9 @@ class FocalLoss(nn.Module):
         idx = target.cpu().long()
 
         one_hot_key = torch.FloatTensor(target.size(0), num_class).zero_()
-	
-	# to resolve error in idx in scatter_
-	idx[idx==225]=0
+    
+        # to resolve error in idx in scatter_
+        idx[idx==225]=0
         
         one_hot_key = one_hot_key.scatter_(1, idx, 1)
         if one_hot_key.device != logit.device:
@@ -265,23 +266,23 @@ def softmax_js_loss(inputs, targets, **_):
 
 
 def pair_wise_loss(unsup_outputs, size_average=True, nbr_of_pairs=8):
-	"""
-	Pair-wise loss in the sup. mat.
-	"""
-	if isinstance(unsup_outputs, list):
-		unsup_outputs = torch.stack(unsup_outputs)
+    """
+    Pair-wise loss in the sup. mat.
+    """
+    if isinstance(unsup_outputs, list):
+        unsup_outputs = torch.stack(unsup_outputs)
 
-	# Only for a subset of the aux outputs to reduce computation and memory
-	unsup_outputs = unsup_outputs[torch.randperm(unsup_outputs.size(0))]
-	unsup_outputs = unsup_outputs[:nbr_of_pairs]
+    # Only for a subset of the aux outputs to reduce computation and memory
+    unsup_outputs = unsup_outputs[torch.randperm(unsup_outputs.size(0))]
+    unsup_outputs = unsup_outputs[:nbr_of_pairs]
 
-	temp = torch.zeros_like(unsup_outputs) # For grad purposes
-	for i, u in enumerate(unsup_outputs):
-		temp[i] = F.softmax(u, dim=1)
-	mean_prediction = temp.mean(0).unsqueeze(0) # Mean over the auxiliary outputs
-	pw_loss = ((temp - mean_prediction)**2).mean(0) # Variance
-	pw_loss = pw_loss.sum(1) # Sum over classes
-	if size_average:
-		return pw_loss.mean()
-	return pw_loss.sum()
+    temp = torch.zeros_like(unsup_outputs) # For grad purposes
+    for i, u in enumerate(unsup_outputs):
+        temp[i] = F.softmax(u, dim=1)
+    mean_prediction = temp.mean(0).unsqueeze(0) # Mean over the auxiliary outputs
+    pw_loss = ((temp - mean_prediction)**2).mean(0) # Variance
+    pw_loss = pw_loss.sum(1) # Sum over classes
+    if size_average:
+        return pw_loss.mean()
+    return pw_loss.sum()
 

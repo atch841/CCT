@@ -7,6 +7,7 @@ from scipy import ndimage
 from scipy.ndimage.interpolation import zoom
 from torch.utils.data import Dataset
 import SimpleITK as sitk
+from misc import imutils
 
 
 def random_rot_flip(image, label):
@@ -85,7 +86,45 @@ class LiTS_dataset(Dataset):
             label = ndimage.zoom(label, (0.5, 0.5), order=0)
             image = torch.from_numpy(image.astype(np.float32)).unsqueeze(0)
             label = torch.from_numpy(label.astype(np.float32))
+            # print(image.shape, label.shape)
             sample = {'image': image, 'label': label}
         sample['label'] = sample['label'].max()
         sample['name'] = self.sample_list_ct[idx][:-4]
         return sample
+
+
+class LiTS_datasetMSF(LiTS_dataset):
+
+    def __init__(self, base_dir, split,
+                 scales=(1.0,)):
+        self.scales = scales
+
+        super().__init__(base_dir, split, tumor_only=True)
+        self.scales = scales
+
+    def __getitem__(self, idx):
+        # name = self.img_name_list[idx]
+        name = self.sample_list_ct[idx][:-4]
+        # name_str = decode_int_filename(name)
+
+        # img = imageio.imread(get_img_path(name_str, self.voc12_root))
+        img = np.load(self.data_dir + 'ct/' +  self.sample_list_ct[idx])
+        label = np.load(self.data_dir + 'seg/' +  self.sample_list_seg[idx])
+        img = ndimage.zoom(img, (0.5, 0.5), order=3)
+        label = ndimage.zoom(label, (0.5, 0.5), order=0)
+
+        ms_img_list = []
+        for s in self.scales:
+            if s == 1:
+                s_img = img
+            else:
+                s_img = imutils.pil_rescale(img, s, order=3)
+            # s_img = self.img_normal(s_img)
+            # s_img = imutils.HWC_to_CHW(s_img)
+            ms_img_list.append(np.stack([s_img, np.flip(s_img, -1)], axis=0))
+        if len(self.scales) == 1:
+            ms_img_list = ms_img_list[0]
+
+        out = {"name": name, "img": ms_img_list, "size": (img.shape[0], img.shape[1]),
+               "label": torch.from_numpy(np.array([label.max()]))}
+        return out

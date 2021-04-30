@@ -15,7 +15,7 @@ class CCT(BaseModel):
             pretrained=True, use_weak_lables=False, weakly_loss_w=0.4):
 
         if not testing:
-            assert (ignore_index is not None) and (sup_loss is not None) and (cons_w_unsup is not None)
+            assert (sup_loss is not None) and (cons_w_unsup is not None)
 
         super(CCT, self).__init__()
         assert int(conf['supervised']) + int(conf['semi']) == 1, 'one mode only'
@@ -27,13 +27,13 @@ class CCT(BaseModel):
         # Supervised and unsupervised losses
         self.ignore_index = ignore_index
         if conf['un_loss'] == "KL":
-        	self.unsuper_loss = softmax_kl_loss
+            self.unsuper_loss = softmax_kl_loss
         elif conf['un_loss'] == "MSE":
-        	self.unsuper_loss = softmax_mse_loss
+            self.unsuper_loss = softmax_mse_loss
         elif conf['un_loss'] == "JS":
-        	self.unsuper_loss = softmax_js_loss
+            self.unsuper_loss = softmax_js_loss
         else:
-        	raise ValueError(f"Invalid supervised loss {conf['un_loss']}")
+            raise ValueError(f"Invalid supervised loss {conf['un_loss']}")
 
         self.unsup_loss_w = cons_w_unsup
         self.sup_loss_w = conf['supervised_w']
@@ -63,21 +63,21 @@ class CCT(BaseModel):
         # The auxilary decoders
         if self.mode == 'semi' or self.mode == 'weakly_semi':
             vat_decoder = [VATDecoder(upscale, decoder_in_ch, num_classes, xi=conf['xi'],
-            							eps=conf['eps']) for _ in range(conf['vat'])]
+                                        eps=conf['eps']) for _ in range(conf['vat'])]
             drop_decoder = [DropOutDecoder(upscale, decoder_in_ch, num_classes,
-            							drop_rate=conf['drop_rate'], spatial_dropout=conf['spatial'])
-            							for _ in range(conf['drop'])]
+                                        drop_rate=conf['drop_rate'], spatial_dropout=conf['spatial'])
+                                        for _ in range(conf['drop'])]
             cut_decoder = [CutOutDecoder(upscale, decoder_in_ch, num_classes, erase=conf['erase'])
-            							for _ in range(conf['cutout'])]
+                                        for _ in range(conf['cutout'])]
             context_m_decoder = [ContextMaskingDecoder(upscale, decoder_in_ch, num_classes)
-            							for _ in range(conf['context_masking'])]
+                                        for _ in range(conf['context_masking'])]
             object_masking = [ObjectMaskingDecoder(upscale, decoder_in_ch, num_classes)
-            							for _ in range(conf['object_masking'])]
+                                        for _ in range(conf['object_masking'])]
             feature_drop = [FeatureDropDecoder(upscale, decoder_in_ch, num_classes)
-            							for _ in range(conf['feature_drop'])]
+                                        for _ in range(conf['feature_drop'])]
             feature_noise = [FeatureNoiseDecoder(upscale, decoder_in_ch, num_classes,
-            							uniform_range=conf['uniform_range'])
-            							for _ in range(conf['feature_noise'])]
+                                        uniform_range=conf['uniform_range'])
+                                        for _ in range(conf['feature_noise'])]
 
             self.aux_decoders = nn.ModuleList([*vat_decoder, *drop_decoder, *cut_decoder,
                                     *context_m_decoder, *object_masking, *feature_drop, *feature_noise])
@@ -139,7 +139,7 @@ class CCT(BaseModel):
             # If case we're using weak lables, add the weak loss term with a weight (self.weakly_loss_w)
             if self.use_weak_lables:
                 weight_w = (weight_u / self.unsup_loss_w.final_w) * self.weakly_loss_w
-                loss_weakly = sum([CE_loss(outp, target_ul, ignore_index=self.ignore_index) for outp in outputs_ul]) / len(outputs_ul)
+                loss_weakly = sum([CE_loss(outp, target_ul) for outp in outputs_ul]) / len(outputs_ul)
                 loss_weakly = loss_weakly * weight_w
                 curr_losses['loss_weakly'] = loss_weakly
                 total_loss += loss_weakly

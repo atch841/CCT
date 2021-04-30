@@ -20,12 +20,12 @@ def main(config, resume):
     train_logger = Logger()
 
     # DATA LOADERS
-    config['train_supervised']['n_labeled_examples'] = config['n_labeled_examples']
-    config['train_unsupervised']['n_labeled_examples'] = config['n_labeled_examples']
+    # config['train_supervised']['n_labeled_examples'] = config['n_labeled_examples']
+    # config['train_unsupervised']['n_labeled_examples'] = config['n_labeled_examples']
     config['train_unsupervised']['use_weak_lables'] = config['use_weak_lables']
-    supervised_loader = dataloaders.VOC(config['train_supervised'])
-    unsupervised_loader = dataloaders.VOC(config['train_unsupervised'])
-    val_loader = dataloaders.VOC(config['val_loader'])
+    supervised_loader = dataloaders.LiTS(config['train_supervised'])
+    unsupervised_loader = dataloaders.LiTS(config['train_unsupervised'])
+    val_loader = dataloaders.LiTS(config['val_loader'])
     iter_per_epoch = len(unsupervised_loader)
 
     # SUPERVISED LOSS
@@ -44,9 +44,9 @@ def main(config, resume):
                                         rampup_ends=rampup_ends)
 
     model = models.CCT(num_classes=val_loader.dataset.num_classes, conf=config['model'],
-    						sup_loss=sup_loss, cons_w_unsup=cons_w_unsup,
-    						weakly_loss_w=config['weakly_loss_w'], use_weak_lables=config['use_weak_lables'],
-                            ignore_index=val_loader.dataset.ignore_index)
+                            sup_loss=sup_loss, cons_w_unsup=cons_w_unsup,
+                            weakly_loss_w=config['weakly_loss_w'], use_weak_lables=config['use_weak_lables'])
+                            # ignore_index=val_loader.dataset.ignore_index)
     print(f'\n{model}\n')
 
     # TRAINING
@@ -75,5 +75,5 @@ if __name__=='__main__':
     args = parser.parse_args()
 
     config = json.load(open(args.config))
-    torch.backends.cudnn.benchmark = True
+    # torch.backends.cudnn.benchmark = True
     main(config, args.resume)

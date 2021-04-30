@@ -111,5 +111,5 @@ def run(args):
         validate(model, val_data_loader)
         timer.reset_stage()
 
-    torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
+    torch.save(model.state_dict(), args.cam_weights_name + '.pth')
     torch.cuda.empty_cache()

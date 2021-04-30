@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument("--cam_network", default="net.resnet50_cam", type=str)
     parser.add_argument("--cam_crop_size", default=512, type=int)
     parser.add_argument("--cam_batch_size", default=100, type=int)
-    parser.add_argument("--cam_num_epoches", default=50, type=int)
+    parser.add_argument("--cam_num_epoches", default=10, type=int)
     parser.add_argument("--cam_learning_rate", default=0.01, type=float)
     parser.add_argument("--cam_weight_decay", default=1e-4, type=float)
     parser.add_argument("--cam_eval_thres", default=0.15, type=float)
@@ -44,11 +44,11 @@ if __name__ == '__main__':
     print(vars(args))
 
     # Train resnet on pascal voc for classification
-    timer = pyutils.Timer('step.train_cam:')
-    train_cam.run(args)
+    # timer = pyutils.Timer('step.train_cam:')
+    # train_cam.run(args)
     # Generate class activation maps from pretrained resnet
-    timer = pyutils.Timer('step.make_cam:')
-    make_cam.run(args)
+    # timer = pyutils.Timer('step.make_cam:')
+    # make_cam.run(args)
     # Generate pseudo labels from CAMs
     timer = pyutils.Timer('step.cam_to_ir_label:')
     cam_to_pseudo_labels.run(args)

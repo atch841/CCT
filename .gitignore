@@ -118,6 +118,7 @@ input/
 saved/
 outputs/
 datasets/
+result/
 
 # editor, os cache directory
 .vscode/
