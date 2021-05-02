@@ -56,10 +56,10 @@
 
     "train_supervised": {
         "data_dir": "/home/viplab/nas/train5_20p/",
-        "batch_size": 20,
+        "batch_size": 25,
         "crop_size": 256,
         "shuffle": true,
-        "base_size": 300,
+        "base_size": 256,
         "scale": true,
         "augment": true,
         "flip": true,
@@ -72,10 +72,10 @@
     "train_unsupervised": {
         "data_dir": "/home/viplab/nas/train5/",
         "weak_labels_output": "pseudo_labels/result/pseudo_labels",
-        "batch_size": 10,
+        "batch_size": 25,
         "crop_size": 256,
         "shuffle": true,
-        "base_size": 300,
+        "base_size": 256,
         "scale": true,
         "augment": true,
         "flip": true,

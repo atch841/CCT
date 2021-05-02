@@ -96,6 +96,7 @@ class CCT(BaseModel):
 
         # Supervised loss
         if self.sup_type == 'CE':
+            print(output_l.shape, target_l.shape, output_l[:,1].max(), output_l[:,0].max(), target_l.max(), target_l.min())
             loss_sup = self.sup_loss(output_l, target_l, ignore_index=self.ignore_index, temperature=self.softmax_temp) * self.sup_loss_w
         elif self.sup_type == 'FL':
             loss_sup = self.sup_loss(output_l,target_l) * self.sup_loss_w
@@ -139,6 +140,7 @@ class CCT(BaseModel):
             # If case we're using weak lables, add the weak loss term with a weight (self.weakly_loss_w)
             if self.use_weak_lables:
                 weight_w = (weight_u / self.unsup_loss_w.final_w) * self.weakly_loss_w
+                # print(target_ul.max(), target_ul.min())
                 loss_weakly = sum([CE_loss(outp, target_ul) for outp in outputs_ul]) / len(outputs_ul)
                 loss_weakly = loss_weakly * weight_w
                 curr_losses['loss_weakly'] = loss_weakly

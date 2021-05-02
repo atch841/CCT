@@ -28,8 +28,8 @@ class consistency_weight(object):
 
 
 def CE_loss(input_logits, target_targets, ignore_index=None, temperature=1):
-    # print(input_logits.shape, target_targets.shape, input_logits.max(), target_targets.max())
-    return F.cross_entropy(input_logits/temperature, target_targets)
+    # print(target_targets.max(), target_targets.min())
+    return F.cross_entropy(input_logits/temperature, target_targets, weight=torch.tensor([0.0, 1.0], device='cuda'))
 
 # for FocalLoss
 def softmax_helper(x):

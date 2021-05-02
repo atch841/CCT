@@ -23,22 +23,27 @@ from pathlib import Path
 
 
 class testDataset(Dataset):
-    def __init__(self, images):
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
-        images_path = Path(images)
-        self.filelist = list(images_path.glob("*.jpg"))
+    def __init__(self, images_path):
+        # mean = [0.485, 0.456, 0.406]
+        # std = [0.229, 0.224, 0.225]
+        # images_path = Path(images)
+        # self.filelist = list(images_path.glob("*.jpg"))
+        self.images_path = images_path + 'ct/'
+        self.filelist = os.listdir(self.images_path)
         self.to_tensor = transforms.ToTensor()
-        self.normalize = transforms.Normalize(mean, std)
+        # self.normalize = transforms.Normalize(mean, std)
 
     def __len__(self):
         return len(self.filelist)
 
     def __getitem__(self, index):
-        image_path = self.filelist[index]
+        image_path = self.images_path + self.filelist[index]
         image_id = str(image_path).split("/")[-1].split(".")[0]
-        image = Image.open(image_path)
-        image = self.normalize(self.to_tensor(image))
+        # image = Image.open(image_path)
+        # image = self.normalize(self.to_tensor(image))
+        image = np.load(image_path)
+        image = ndimage.zoom(image, (0.5, 0.5), order=3)
+        image = np.expand_dims(image, 0)
         return image, image_id
 
 def multi_scale_predict(model, image, scales, num_classes, flip=True):
@@ -74,8 +79,8 @@ def main():
     # DATA
     testdataset = testDataset(args.images)
     loader = DataLoader(testdataset, batch_size=1, shuffle=False, num_workers=1)
-    num_classes = 21
-    palette = get_voc_pallete(num_classes)
+    num_classes = 2
+    # palette = get_voc_pallete(num_classes)
 
     # MODEL
     config['model']['supervised'] = True; config['model']['semi'] = False
@@ -109,8 +114,9 @@ def main():
         prediction = np.asarray(np.argmax(output, axis=0), dtype=np.uint8)
 
         # SAVE RESULTS
-        prediction_im = colorize_mask(prediction, palette)
-        prediction_im.save('outputs/'+image_id[0]+'.png')
+        # prediction_im = colorize_mask(prediction, palette)
+        # prediction_im.save('outputs/'+image_id[0]+'.png')
+        np.save('outputs/' + image_id[0] + '.npy', prediction)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -119,7 +125,7 @@ def parse_arguments():
     parser.add_argument( '--model', default=None, type=str,
                         help='Path to the trained .pth model')
     parser.add_argument( '--save', action='store_true', help='Save images')
-    parser.add_argument('--images', default="/home/yassine/Datasets/vision/PascalVoc/VOC/VOCdevkit/VOC2012/test_images", type=str,
+    parser.add_argument('--images', default="/home/viplab/nas/val5/", type=str,
                         help='Test images for Pascal VOC')
     args = parser.parse_args()
     return args

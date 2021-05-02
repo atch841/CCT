@@ -134,7 +134,7 @@ class BaseTrainer:
             'config': self.config
         }
 
-        filename = os.path.join(self.checkpoint_dir, f'checkpoint.pth')
+        filename = os.path.join(self.checkpoint_dir, f'checkpoint_epoch{epoch}.pth')
         self.logger.info(f'\nSaving a checkpoint: {filename} ...') 
         torch.save(state, filename)
 

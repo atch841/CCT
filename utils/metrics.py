@@ -43,11 +43,14 @@ class AverageMeter(object):
 def batch_pix_accuracy(output, target):
     _, predict = torch.max(output, 1)
 
-    predict = predict.int() + 1
-    target = target.int() + 1
+    predict_np = predict.cpu().data.numpy()
+    # predict = predict.int() + 1
+    # target = target.int() + 1
 
     pixel_labeled = (target > 0).sum()
     pixel_correct = ((predict == target)*(target > 0)).sum()
+    print(pixel_correct.cpu().data.numpy(), pixel_labeled.cpu().data.numpy(), target.max().cpu().data.numpy(), target.min().cpu().data.numpy(), predict_np.max(), predict_np.min(), predict_np.sum(), (predict_np==0).sum(), predict_np.shape)
+    np.save('saved/test.npy', predict_np)
     assert pixel_correct <= pixel_labeled, "Correct area should be smaller than Labeled"
     return pixel_correct.cpu().numpy(), pixel_labeled.cpu().numpy()
 

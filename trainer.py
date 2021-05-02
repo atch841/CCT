@@ -52,6 +52,7 @@ class Trainer(BaseTrainer):
         self.logger.info('\n')
         self.model.train()
 
+        print(self.mode)
         if self.mode == 'supervised':
             dataloader = iter(self.supervised_loader)
             tbar = tqdm(range(len(self.supervised_loader)), ncols=135)
@@ -129,6 +130,7 @@ class Trainer(BaseTrainer):
                 loss = F.cross_entropy(output, target)
                 total_loss_val.update(loss.item())
 
+                print('val')
                 correct, labeled, inter, union = eval_metrics(output, target, self.num_classes, self.ignore_index)
                 total_inter, total_union = total_inter+inter, total_union+union
                 total_correct, total_label = total_correct+correct, total_label+labeled
@@ -199,12 +201,14 @@ class Trainer(BaseTrainer):
 
 
     def _compute_metrics(self, outputs, target_l, target_ul, epoch):
+        print('sup')
         seg_metrics_l = eval_metrics(outputs['sup_pred'], target_l, self.num_classes, self.ignore_index)
         self._update_seg_metrics(*seg_metrics_l, True)
         seg_metrics_l = self._get_seg_metrics(True)
         self.pixel_acc_l, self.mIoU_l, self.class_iou_l = seg_metrics_l.values()
 
         if self.mode == 'semi':
+            print('unsup')
             seg_metrics_ul = eval_metrics(outputs['unsup_pred'], target_ul, self.num_classes, self.ignore_index)
             self._update_seg_metrics(*seg_metrics_ul, False)
             seg_metrics_ul = self._get_seg_metrics(False)
