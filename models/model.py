@@ -50,6 +50,8 @@ class CCT(BaseModel):
         # confidence masking (sup mat)
         self.confidence_th = conf['confidence_th']
         self.confidence_masking = conf['confidence_masking']
+        # dice loss
+        self.dice_loss = DiceLoss(2)
 
         # Create the model
         self.encoder = Encoder(pretrained=pretrained)
@@ -100,6 +102,11 @@ class CCT(BaseModel):
             loss_sup = self.sup_loss(output_l, target_l, ignore_index=self.ignore_index, temperature=self.softmax_temp) * self.sup_loss_w
         elif self.sup_type == 'FL':
             loss_sup = self.sup_loss(output_l,target_l) * self.sup_loss_w
+        elif self.sup_type == 'DC':
+            output_l_np = torch.softmax(output_l, 1).round().cpu().data.numpy()
+            target_l_np = target_l.cpu().data.numpy()
+            print('model', output_l_np.shape, target_l_np.shape, output_l_np[:,1].max(), output_l_np[:,0].max(), target_l_np.max(), target_l_np.min(), output_l_np[:,1].sum(), (output_l_np[:,1]==0).sum(), target_l_np.sum(), (target_l_np==0).sum())
+            loss_sup = self.sup_loss(output_l, target_l, softmax=True) * self.sup_loss_w
         else:
             loss_sup = self.sup_loss(output_l, target_l, curr_iter=curr_iter, epoch=epoch, ignore_index=self.ignore_index) * self.sup_loss_w
 
@@ -139,9 +146,15 @@ class CCT(BaseModel):
 
             # If case we're using weak lables, add the weak loss term with a weight (self.weakly_loss_w)
             if self.use_weak_lables:
-                weight_w = (weight_u / self.unsup_loss_w.final_w) * self.weakly_loss_w
+                if self.unsup_loss_w.final_w:
+                    weight_w = (weight_u / self.unsup_loss_w.final_w) * self.weakly_loss_w
+                else:
+                    weight_w = self.weakly_loss_w
                 # print(target_ul.max(), target_ul.min())
-                loss_weakly = sum([CE_loss(outp, target_ul) for outp in outputs_ul]) / len(outputs_ul)
+                if self.sup_type == 'CE':
+                    loss_weakly = sum([CE_loss(outp, target_ul) for outp in outputs_ul]) / len(outputs_ul)
+                else:
+                    loss_weakly = sum([self.dice_loss(outp, target_ul, softmax=True) for outp in outputs_ul]) / len(outputs_ul)
                 loss_weakly = loss_weakly * weight_w
                 curr_losses['loss_weakly'] = loss_weakly
                 total_loss += loss_weakly

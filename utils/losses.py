@@ -29,7 +29,7 @@ class consistency_weight(object):
 
 def CE_loss(input_logits, target_targets, ignore_index=None, temperature=1):
     # print(target_targets.max(), target_targets.min())
-    return F.cross_entropy(input_logits/temperature, target_targets, weight=torch.tensor([0.0, 1.0], device='cuda'))
+    return F.cross_entropy(input_logits/temperature, target_targets, weight=torch.tensor([1.0, 389.0], device='cuda'))
 
 # for FocalLoss
 def softmax_helper(x):
@@ -217,7 +217,44 @@ class abCE_loss(nn.Module):
         else:
             raise NotImplementedError('Reduction Error!')
 
+class DiceLoss(nn.Module):
+    def __init__(self, n_classes):
+        super(DiceLoss, self).__init__()
+        self.n_classes = n_classes
 
+    def _one_hot_encoder(self, input_tensor):
+        tensor_list = []
+        for i in range(self.n_classes):
+            temp_prob = input_tensor == i  # * torch.ones_like(input_tensor)
+            tensor_list.append(temp_prob.unsqueeze(1))
+        output_tensor = torch.cat(tensor_list, dim=1)
+        return output_tensor.float()
+
+    def _dice_loss(self, score, target):
+        target = target.float()
+        smooth = 1e-5
+        intersect = torch.sum(score * target)
+        y_sum = torch.sum(target * target)
+        z_sum = torch.sum(score * score)
+        loss = (2 * intersect + smooth) / (z_sum + y_sum + smooth)
+        loss = 1 - loss
+        return loss
+
+    def forward(self, inputs, target, weight=None, softmax=False):
+        if softmax:
+            inputs = torch.softmax(inputs, dim=1)
+        target = self._one_hot_encoder(target)
+        if weight is None:
+            weight = [1] * self.n_classes
+        assert inputs.size() == target.size(), 'predict {} & target {} shape do not match'.format(inputs.size(), target.size())
+        assert inputs.max() <= 1 and inputs.min() >= 0 and target.max() <= 1 and target.min() >= 0, '{} {} {} {}'.format(inputs.max(), inputs.min(), target.max(), target.min())
+        # class_wise_dice = []
+        loss = 0.0
+        for i in range(1, self.n_classes):
+            dice = self._dice_loss(inputs[:, i], target[:, i])
+            # class_wise_dice.append(1.0 - dice.item())
+            loss += dice * weight[i]
+        return loss / self.n_classes
 
 def softmax_mse_loss(inputs, targets, conf_mask=False, threshold=None, use_softmax=False):
     assert inputs.requires_grad == True and targets.requires_grad == False

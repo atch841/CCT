@@ -8,7 +8,7 @@ import math
 from utils import Logger
 from trainer import Trainer
 import torch.nn.functional as F
-from utils.losses import abCE_loss, CE_loss, consistency_weight, FocalLoss, softmax_helper, get_alpha
+from utils.losses import DiceLoss, abCE_loss, CE_loss, consistency_weight, FocalLoss, softmax_helper, get_alpha
 
 
 def get_instance(module, name, config, *args):
@@ -34,6 +34,8 @@ def main(config, resume):
     elif config['model']['sup_loss'] == 'FL':
         alpha = get_alpha(supervised_loader) # calculare class occurences
         sup_loss = FocalLoss(apply_nonlin = softmax_helper, alpha = alpha, gamma = 2, smooth = 1e-5)
+    elif config['model']['sup_loss'] == 'DC':
+        sup_loss = DiceLoss(val_loader.dataset.num_classes)
     else:
         sup_loss = abCE_loss(iters_per_epoch=iter_per_epoch, epochs=config['trainer']['epochs'],
                                 num_classes=val_loader.dataset.num_classes)

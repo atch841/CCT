@@ -23,6 +23,7 @@ class Trainer(BaseTrainer):
         self.supervised_loader = supervised_loader
         self.unsupervised_loader = unsupervised_loader
         self.val_loader = val_loader
+        self.save_dir = config['trainer']['save_dir']
 
         # self.ignore_index = self.val_loader.dataset.ignore_index
         self.ignore_index = None
@@ -202,6 +203,10 @@ class Trainer(BaseTrainer):
 
     def _compute_metrics(self, outputs, target_l, target_ul, epoch):
         print('sup')
+        predict_np = outputs['sup_pred'].cpu().data.numpy()
+        target_np = target_l.cpu().data.numpy()
+        np.save(self.save_dir + 'test_sup_p.npy', predict_np)
+        np.save(self.save_dir + 'test_sup_t.npy', target_np)
         seg_metrics_l = eval_metrics(outputs['sup_pred'], target_l, self.num_classes, self.ignore_index)
         self._update_seg_metrics(*seg_metrics_l, True)
         seg_metrics_l = self._get_seg_metrics(True)
@@ -209,6 +214,10 @@ class Trainer(BaseTrainer):
 
         if self.mode == 'semi':
             print('unsup')
+            predict_np = outputs['unsup_pred'].cpu().data.numpy()
+            target_np = target_ul.cpu().data.numpy()
+            np.save(self.save_dir + 'test_unsup_p.npy', predict_np)
+            np.save(self.save_dir + 'test_unsup_t.npy', target_np)
             seg_metrics_ul = eval_metrics(outputs['unsup_pred'], target_ul, self.num_classes, self.ignore_index)
             self._update_seg_metrics(*seg_metrics_ul, False)
             seg_metrics_ul = self._get_seg_metrics(False)
