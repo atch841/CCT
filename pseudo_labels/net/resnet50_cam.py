@@ -17,26 +17,30 @@ class Net(nn.Module):
         self.stage3 = nn.Sequential(self.resnet50.layer3)
         self.stage4 = nn.Sequential(self.resnet50.layer4)
 
-        self.classifier = nn.Conv2d(2048, 20, 1, bias=False)
+        # self.classifier = nn.Conv2d(2048, 20, 1, bias=False)
+        self.classifier = nn.Conv2d(2048, 1, 1, bias=False)
 
         self.backbone = nn.ModuleList([self.stage1, self.stage2, self.stage3, self.stage4])
         self.newly_added = nn.ModuleList([self.classifier])
 
     def forward(self, x):
+        if x.size()[1] == 1:
+            x = x.repeat(1,3,1,1)
         x = self.stage1(x)
         x = self.stage2(x).detach()
         x = self.stage3(x)
         x = self.stage4(x)
         x = torchutils.gap2d(x, keepdims=True)
         x = self.classifier(x)
-        x = x.view(-1, 20)
+        # x = x.view(-1, 20)
+        x = x.view(-1, 1)
         return x
 
-    def train(self, mode=True):
-        for p in self.resnet50.conv1.parameters():
-            p.requires_grad = False
-        for p in self.resnet50.bn1.parameters():
-            p.requires_grad = False
+    # def train(self, mode=True):
+    #     for p in self.resnet50.conv1.parameters():
+    #         p.requires_grad = False
+    #     for p in self.resnet50.bn1.parameters():
+    #         p.requires_grad = False
 
     def trainable_parameters(self):
         return (list(self.backbone.parameters()), list(self.newly_added.parameters()))
@@ -47,6 +51,8 @@ class CAM(Net):
         super(CAM, self).__init__()
 
     def forward(self, x):
+        if x.size()[1] == 1:
+            x = x.repeat(1,3,1,1)
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)
