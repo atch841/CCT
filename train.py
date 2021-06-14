@@ -20,12 +20,12 @@ def main(config, resume):
     train_logger = Logger()
 
     # DATA LOADERS
-    config['train_supervised']['n_labeled_examples'] = config['n_labeled_examples']
-    config['train_unsupervised']['n_labeled_examples'] = config['n_labeled_examples']
+    # config['train_supervised']['n_labeled_examples'] = config['n_labeled_examples']
+    # config['train_unsupervised']['n_labeled_examples'] = config['n_labeled_examples']
     config['train_unsupervised']['use_weak_lables'] = config['use_weak_lables']
-    supervised_loader = dataloaders.VOC(config['train_supervised'])
-    unsupervised_loader = dataloaders.VOC(config['train_unsupervised'])
-    val_loader = dataloaders.VOC(config['val_loader'])
+    supervised_loader = dataloaders.LiTS(config['train_supervised'])
+    unsupervised_loader = dataloaders.LiTS(config['train_unsupervised'])
+    val_loader = dataloaders.LiTS(config['val_loader'])
     iter_per_epoch = len(unsupervised_loader)
 
     # SUPERVISED LOSS
@@ -36,7 +36,7 @@ def main(config, resume):
         sup_loss = FocalLoss(apply_nonlin = softmax_helper, alpha = alpha, gamma = 2, smooth = 1e-5)
     else:
         sup_loss = abCE_loss(iters_per_epoch=iter_per_epoch, epochs=config['trainer']['epochs'],
-                                num_classes=val_loader.dataset.num_classes)
+                                num_classes=val_loader.dataset.num_classes, weight=[1.0, 389.0])
 
     # MODEL
     rampup_ends = int(config['ramp_up'] * config['trainer']['epochs'])

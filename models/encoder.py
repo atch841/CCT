@@ -57,6 +57,8 @@ class Encoder(nn.Module):
         self.psp = _PSPModule(2048, bin_sizes=[1, 2, 3, 6])
 
     def forward(self, x):
+        if x.size()[1] == 1:
+            x = x.repeat(1,3,1,1)
         x = self.base(x)
         x = self.psp(x)
         return x

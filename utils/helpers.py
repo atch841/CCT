@@ -26,6 +26,16 @@ class DeNormalize(object):
             t.mul_(s).add_(m)
         return tensor
 
+        
+class DeNormalize1(object):
+    def __init__(self):
+        pass
+
+    def __call__(self, tensor):
+        tensor += tensor.min()
+        tensor /= tensor.max()
+        return tensor
+
 
 def dir_exists(path):
     if not os.path.exists(path):

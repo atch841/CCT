@@ -10,18 +10,18 @@ from scipy import ndimage
 from math import ceil
 
 class BaseDataSet(Dataset):
-    def __init__(self, data_dir, split, mean, std, ignore_index, base_size=None, augment=True, val=False,
+    def __init__(self, data_dir, split, ignore_index, base_size=None, augment=True, val=False,
                 jitter=False, use_weak_lables=False, weak_labels_output=None, crop_size=None, scale=False, flip=False, rotate=False,
                 blur=False, return_id=False, n_labeled_examples=None):
 
         self.root = data_dir
         self.split = split
-        self.mean = mean
-        self.std = std
+        # self.mean = mean
+        # self.std = std
         self.augment = augment
         self.crop_size = crop_size
         self.jitter = jitter
-        self.image_padding = (np.array(mean)*255.).tolist()
+        # self.image_padding = (np.array(mean)*255.).tolist()
         self.ignore_index = ignore_index
         self.return_id = return_id
         self.n_labeled_examples = n_labeled_examples
@@ -39,7 +39,7 @@ class BaseDataSet(Dataset):
 
         self.jitter_tf = transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1)
         self.to_tensor = transforms.ToTensor()
-        self.normalize = transforms.Normalize(mean, std)
+        # self.normalize = transforms.Normalize(mean, std)
 
         self.files = []
         self._set_files()
@@ -54,7 +54,7 @@ class BaseDataSet(Dataset):
 
     def _rotate(self, image, label):
         # Rotate the image with an angle between -10 and 10
-        h, w, _ = image.shape
+        h, w = image.shape
         angle = random.randint(-10, 10)
         center = (w / 2, h / 2)
         rot_matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
@@ -71,7 +71,7 @@ class BaseDataSet(Dataset):
         else:
             raise ValueError
 
-        h, w, _ = image.shape
+        h, w = image.shape
         pad_h = max(crop_h - h, 0)
         pad_w = max(crop_w - w, 0)
         pad_kwargs = {
@@ -81,11 +81,11 @@ class BaseDataSet(Dataset):
             "right": pad_w,
             "borderType": cv2.BORDER_CONSTANT,}
         if pad_h > 0 or pad_w > 0:
-            image = cv2.copyMakeBorder(image, value=self.image_padding, **pad_kwargs)
+            image = cv2.copyMakeBorder(image, value=0, **pad_kwargs)
             label = cv2.copyMakeBorder(label, value=self.ignore_index, **pad_kwargs)
 
         # Cropping 
-        h, w, _ = image.shape
+        h, w = image.shape
         start_h = random.randint(0, h - crop_h)
         start_w = random.randint(0, w - crop_w)
         end_h = start_h + crop_h
@@ -111,7 +111,7 @@ class BaseDataSet(Dataset):
 
     def _resize(self, image, label, bigger_side_to_base_size=True):
         if isinstance(self.base_size, int):
-            h, w, _ = image.shape
+            h, w = image.shape
             if self.scale:
                 longside = random.randint(int(self.base_size*0.5), int(self.base_size*2.0))
                 #longside = random.randint(int(self.base_size*0.5), int(self.base_size*1))
@@ -127,7 +127,7 @@ class BaseDataSet(Dataset):
             return image, label
 
         elif (isinstance(self.base_size, list) or isinstance(self.base_size, tuple)) and len(self.base_size) == 2:
-            h, w, _ = image.shape
+            h, w = image.shape
             if self.scale:
                 scale = random.random() * 1.5 + 0.5 # Scaling between [0.5, 2]
                 h, w = int(self.base_size[0] * scale), int(self.base_size[1] * scale)
@@ -143,14 +143,16 @@ class BaseDataSet(Dataset):
     def _val_augmentation(self, image, label):
         if self.base_size is not None:
             image, label = self._resize(image, label)
-            image = self.normalize(self.to_tensor(Image.fromarray(np.uint8(image))))
+            # image = self.normalize(self.to_tensor(Image.fromarray(np.uint8(image))))
+            image = self.to_tensor(image)
             return image, label
 
-        image = self.normalize(self.to_tensor(Image.fromarray(np.uint8(image))))
+        # image = self.normalize(self.to_tensor(Image.fromarray(np.uint8(image))))
+        image = self.to_tensor(image)
         return image, label
 
     def _augmentation(self, image, label):
-        h, w, _ = image.shape
+        h, w = image.shape
 
         if self.base_size is not None:
             image, label = self._resize(image, label)
@@ -164,7 +166,8 @@ class BaseDataSet(Dataset):
         image = Image.fromarray(np.uint8(image))
         image = self.jitter_tf(image) if self.jitter else image    
         
-        return self.normalize(self.to_tensor(image)), label
+        # return self.normalize(self.to_tensor(image)), label
+        return self.to_tensor(image), label
 
     def __len__(self):
         return len(self.files)

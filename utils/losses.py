@@ -28,7 +28,7 @@ class consistency_weight(object):
 
 
 def CE_loss(input_logits, target_targets, ignore_index, temperature=1):
-    return F.cross_entropy(input_logits/temperature, target_targets, ignore_index=ignore_index)
+    return F.cross_entropy(input_logits/temperature, target_targets, weight=torch.tensor([1.0, 389.0], device='cuda'), ignore_index=ignore_index)
 
 # for FocalLoss
 def softmax_helper(x):
@@ -119,7 +119,7 @@ class FocalLoss(nn.Module):
             assert len(alpha) == num_class
             alpha = torch.FloatTensor(alpha).view(num_class, 1)
             alpha = alpha / alpha.sum()
-	    alpha = 1/alpha # inverse of class frequency
+            alpha = 1/alpha # inverse of class frequency
         elif isinstance(alpha, float):
             alpha = torch.ones(num_class, 1)
             alpha = alpha * (1 - self.alpha)
@@ -134,9 +134,9 @@ class FocalLoss(nn.Module):
         idx = target.cpu().long()
 
         one_hot_key = torch.FloatTensor(target.size(0), num_class).zero_()
-	
-	# to resolve error in idx in scatter_
-	idx[idx==225]=0
+
+        # to resolve error in idx in scatter_
+        idx[idx==225]=0
         
         one_hot_key = one_hot_key.scatter_(1, idx, 1)
         if one_hot_key.device != logit.device:

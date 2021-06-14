@@ -87,12 +87,13 @@ class BaseTrainer:
 
 
     def train(self):
+        # results_val = self._valid_epoch(-1)
         for epoch in range(self.start_epoch, self.epochs+1):
             results = self._train_epoch(epoch)
             if self.do_validation and epoch % self.config['trainer']['val_per_epochs'] == 0:
-                results = self._valid_epoch(epoch)
+                results_val = self._valid_epoch(epoch)
                 self.logger.info('\n\n')
-                for k, v in results.items():
+                for k, v in results_val.items():
                     self.logger.info(f'         {str(k):15s}: {v}')
             
             if self.train_logger is not None:
