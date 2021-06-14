@@ -97,7 +97,7 @@ class BaseTrainer:
                     self.logger.info(f'         {str(k):15s}: {v}')
             
             if self.train_logger is not None:
-                log = {'epoch' : epoch, **results}
+                log = {'epoch' : epoch, **results_val}
                 self.train_logger.add_entry(log)
 
             # CHECKING IF THIS IS THE BEST MODEL (ONLY FOR VAL)
