@@ -115,9 +115,10 @@ ENV/
 # input data, saved log, checkpoints
 data/
 input/
-saved/
+saved*/
 outputs/
 datasets/
+result*/
 
 # editor, os cache directory
 .vscode/

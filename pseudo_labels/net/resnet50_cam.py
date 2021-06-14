@@ -56,8 +56,13 @@ class CAM(Net):
         x = self.stage1(x)
         x = self.stage2(x)
         x = self.stage3(x)
-        x = self.stage4(x)
-        x = F.conv2d(x, self.classifier.weight)
+        x_f = self.stage4(x)
+        x = F.conv2d(x_f, self.classifier.weight)
         x = F.relu(x)
         x = x[0] + x[1].flip(-1)
-        return x
+
+        y = torchutils.gap2d(x_f, keepdims=True)
+        y = self.classifier(y)
+        # x = x.view(-1, 20)
+        y = y.view(-1, 1)
+        return x, y

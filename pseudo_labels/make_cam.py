@@ -22,6 +22,8 @@ def _work(process_id, model, dataset, args):
     data_loader = DataLoader(databin, shuffle=False, num_workers=args.num_workers // n_gpus, pin_memory=False)
 
     with torch.no_grad(), cuda.device(process_id):
+        saved = 0
+        discarded = 0
 
         model.cuda()
 
@@ -36,12 +38,14 @@ def _work(process_id, model, dataset, args):
 
             # print(len(pack['img']))
             outputs = []
+            ys = []
             for img in pack['img']:
                 # print(img.shape)
                 img = img.permute(1, 0, 2, 3)
-                o = model(img.cuda(non_blocking=True))
+                o, y = model(img.cuda(non_blocking=True))
                 # print(o.shape)
                 outputs.append(o)
+                ys.append(torch.sigmoid(y).round().cpu().data.numpy())
             # outputs = [model(img.cuda(non_blocking=True))
             #            for img in pack['img']]
 
@@ -58,24 +62,36 @@ def _work(process_id, model, dataset, args):
             # print(valid_cat, bool(valid_cat))
             # print(strided_cam.shape, valid_cat, label)
             # raise EOFError()
-            if valid_cat.nelement() != 0:
+            # print(highres_cam.shape, highres_cam.max(), highres_cam.min())
+            ys = np.asarray(ys)
+            ys = ys.reshape(-1)
+            # print(ys.sum())
+            # if valid_cat.nelement() != 0 and sum(ys) >= len(ys) / 2:
+            if valid_cat.nelement() != 0 and sum(ys) >= 2:
                 strided_cam = strided_cam[valid_cat]
                 strided_cam /= F.adaptive_max_pool2d(strided_cam, (1, 1)) + 1e-5
 
                 highres_cam = highres_cam[valid_cat]
                 highres_cam /= F.adaptive_max_pool2d(highres_cam, (1, 1)) + 1e-5
+            # elif valid_cat.nelement() == 0 and sum(ys) < len(ys) / 2:
+            elif valid_cat.nelement() == 0 and sum(ys) < 2:
+                strided_cam = torch.zeros_like(strided_cam)
+                highres_cam = torch.zeros_like(highres_cam)
             else:
-                strided_cam = torch.zeros_like(strided_cam[0])
-                highres_cam = torch.zeros_like(highres_cam[0])
+                strided_cam = None
+                highres_cam = None
+                discarded += 1
 
             # save cams
-            np.save(os.path.join(args.cam_out_dir, img_name + '.npy'),
+            if type(highres_cam) != type(None):
+                np.save(os.path.join(args.cam_out_dir, img_name + '.npy'),
                     {"keys": valid_cat, "cam": strided_cam.cpu(), "high_res": highres_cam.cpu().numpy()})
+                saved += 1
             # print(process_id, n_gpus, iter, process_id == n_gpus - 1, iter % (len(databin) // 20) == 0, (len(databin) // 20))
             if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
                 print("%d " % ((5*iter+1)//(len(databin) // 20)), end='')
                 print()
-
+    print("saved:{}, discarded:{}".format(saved, discarded))
 
 def run(args):
     model = getattr(importlib.import_module(args.cam_network), 'CAM')()
@@ -86,7 +102,7 @@ def run(args):
 
     # dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
     #                                                          voc12_root=args.voc12_root, scales=args.cam_scales)
-    dataset = LiTS_datasetMSF('/home/viplab/nas/train5/', 'train', scales=args.cam_scales)
+    dataset = LiTS_datasetMSF('/home/viplab/data/train5/', 'train', scales=args.cam_scales)
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print('[ ', end='')

@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import importlib
 
 # import voc12.dataloader
-from dataset import LiTS_dataset, RandomGenerator
+from dataset import LiTS_dataset, RandomGenerator, RandomGenerator_flip
 from misc import pyutils, torchutils
 
 
@@ -49,15 +49,15 @@ def run(args):
     # train_dataset = voc12.dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
     #                                                             resize_long=(320, 640), hor_flip=True,
     #                                                             crop_size=512, crop_method="random")
-    train_dataset = LiTS_dataset('/home/viplab/nas/train5/', 'train', 
-                            transform=RandomGenerator(output_size=[256, 256]), 
+    train_dataset = LiTS_dataset('/home/viplab/data/train5/', 'train', 
+                            transform=RandomGenerator_flip(output_size=[256, 256]), 
                             tumor_only=True)
     train_data_loader = DataLoader(train_dataset, batch_size=args.cam_batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
     # val_dataset = voc12.dataloader.VOC12ClassificationDataset(args.val_list, voc12_root=args.voc12_root,
     #                                                           crop_size=512)
-    val_dataset = LiTS_dataset('/home/viplab/nas/val5/', 'train',  
+    val_dataset = LiTS_dataset('/home/viplab/data/val5/', 'train',  
                             tumor_only=True)
     val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
@@ -79,7 +79,7 @@ def run(args):
         acc = 0
         c = 0
         for step, pack in enumerate(train_data_loader):
-            img = pack['img']
+            img = pack['image']
             label = pack['label'].cuda(non_blocking=True)
             x = model(img)
             # loss = F.multilabel_soft_margin_loss(x, label)
@@ -97,13 +97,13 @@ def run(args):
             acc += (x == label).sum() 
             c += x.view(-1).shape[0]
 
-            if (optimizer.global_step-1)%100 == 0:
+            if (optimizer.global_step-1)%10 == 0:
                 timer.update_progress(optimizer.global_step / max_step)
                 print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
                       'loss:%.4f' % (avg_meter.pop('loss1')),
                       'acc:%.4f' % (acc / c),
                       'imps:%.1f' % ((step + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
-                      'lr: %.4f' % (optimizer.param_groups[0]['lr']),
+                      'lr: %.6f' % (optimizer.param_groups[0]['lr']),
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
 
         else:
