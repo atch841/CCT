@@ -80,6 +80,12 @@ class Trainer(BaseTrainer):
 
             total_loss, cur_losses, outputs = self.model(x_l=input_l, target_l=target_l, x_ul=input_ul,
                                                         curr_iter=batch_idx, target_ul=target_ul, epoch=epoch-1)
+            # np.save(self.save_dir + 'test.npy', {
+            #     'input_l': input_l.cpu().data.numpy(),
+            #     'outputs': outputs['sup_pred'].cpu().data.numpy(),
+            #     'target_l': target_l.cpu().data.numpy()
+            # })
+            # time.sleep(5)
             total_loss = total_loss.mean()
             total_loss.backward()
             self.optimizer.step()

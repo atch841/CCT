@@ -1,7 +1,8 @@
 import json
 import logging
+import sys
 
-logging.basicConfig(level=logging.INFO, format='')
+# logging.basicConfig(filename='example.log', encoding='utf-8', level=logging.INFO, format='%(asctime)s %(message)s')
 
 class Logger:
     """
@@ -10,7 +11,11 @@ class Logger:
     Note:
         Used by BaseTrainer to save training history.
     """
-    def __init__(self):
+    def __init__(self, log_path):
+        logging.basicConfig(filename=log_path + 'log.txt',
+            level=logging.INFO, format='[%(asctime)s.%(msecs)03d] %(message)s', 
+            datefmt='%H:%M:%S')
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
         self.entries = {}
 
     def add_entry(self, entry):

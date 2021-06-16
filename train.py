@@ -17,7 +17,9 @@ def get_instance(module, name, config, *args):
 
 def main(config, resume):
     torch.manual_seed(42)
-    train_logger = Logger()
+    if not os.path.exists(config['trainer']['log_dir']):
+        os.makedirs(config['trainer']['log_dir'])
+    train_logger = Logger(log_path=config['trainer']['log_dir'])
 
     # DATA LOADERS
     # config['train_supervised']['n_labeled_examples'] = config['n_labeled_examples']

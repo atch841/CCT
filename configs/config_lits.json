@@ -56,7 +56,7 @@
 
 
     "train_supervised": {
-        "data_dir": "/home/viplab/nas/train5_1p_half/",
+        "data_dir": "/home/viplab/data/train5_1p_half/",
         "batch_size": 25,
         "crop_size": 256,
         "shuffle": true,
@@ -71,7 +71,7 @@
     },
 
     "train_unsupervised": {
-        "data_dir": "/home/viplab/nas/train5/",
+        "data_dir": "/home/viplab/data/train5/",
         "weak_labels_output": "pseudo_labels/result_new/pseudo_labels",
         "batch_size": 25,
         "crop_size": 256,
@@ -87,7 +87,7 @@
     },
 
     "val_loader": {
-        "data_dir": "/home/viplab/nas/val5/",
+        "data_dir": "/home/viplab/data/val5/",
         "batch_size": 1,
         "val": true,
         "split": "val",

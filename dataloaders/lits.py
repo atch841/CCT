@@ -32,6 +32,8 @@ class LiTSDataset(BaseDataSet):
         else:
             self.files = os.listdir(self.ct_path)
         self.labels = os.listdir(self.seg_path)
+        self.files.sort()
+        self.labels.sort()
 
         # file_list = [line.rstrip().split(' ') for line in tuple(open(file_list, "r"))]
         # self.files, self.labels = list(zip(*file_list))
@@ -45,6 +47,7 @@ class LiTSDataset(BaseDataSet):
             label = np.asarray(Image.open(label_path), dtype=np.int32)
             # label = (label == 255).astype(np.int32)
         else:
+            assert self.files[index] == self.labels[index].replace('seg', 'ct'), (self.files[index], self.labels[index])
             label_path = os.path.join(self.seg_path, self.labels[index])
             label = np.load(label_path)
             label = (label == 2).astype(np.int32)

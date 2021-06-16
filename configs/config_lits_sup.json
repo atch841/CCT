@@ -4,16 +4,16 @@
     "n_gpu": 1,
     "diff_lrs": true,
     "ramp_up": 0.1,
-    "unsupervised_w": 30,
+    "unsupervised_w": 1,
     "ignore_index": 255,
     "lr_scheduler": "Poly",
     "use_weak_lables":true,
-    "weakly_loss_w": 0.4,
+    "weakly_loss_w": 1,
     "pretrained": true,
 
     "model":{
-        "supervised": false,
-        "semi": true,
+        "supervised": true,
+        "semi": false,
         "supervised_w": 1,
 
         "sup_loss": "CE",
@@ -48,7 +48,7 @@
     "optimizer": {
         "type": "SGD",
         "args":{
-            "lr": 1e-3,
+            "lr": 1e-2,
             "weight_decay": 1e-4,
             "momentum": 0.9
         }
@@ -57,7 +57,7 @@
 
     "train_supervised": {
         "data_dir": "/home/viplab/data/train5_1p_half/",
-        "batch_size": 25,
+        "batch_size": 10,
         "crop_size": 256,
         "shuffle": true,
         "base_size": 256,
@@ -97,14 +97,14 @@
 
     "trainer": {
         "epochs": 100,
-        "save_dir": "saved_new_01lr/",
+        "save_dir": "saved_new_sup/",
         "save_period": 5,
   
         "monitor": "max val_dsc_percase",
         "early_stop": 10,
         
         "tensorboardX": true,
-        "log_dir": "saved_new_01lr/",
+        "log_dir": "saved_new_sup/",
         "log_per_iter": 20,
 
         "val": true,
