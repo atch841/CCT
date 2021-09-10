@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import importlib
 
 # import voc12.dataloader
-from dataset import LiTS_dataset, RandomGenerator, RandomGenerator_flip
+from dataset import KiTS_dataset, RandomGenerator, RandomGenerator_flip
 from misc import pyutils, torchutils
 
 
@@ -17,7 +17,8 @@ def validate(model, data_loader):
     print('validating ... ', flush=True, end='')
     val_loss_meter = pyutils.AverageMeter('loss1', 'loss2')
     model.eval()
-    loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.56))
+    # loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.56))
+    loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.67))
 
     acc = 0
     c = 0
@@ -41,7 +42,7 @@ def validate(model, data_loader):
     model.train()
     print('loss: %.4f' % (val_loss_meter.pop('loss1')),
           'acc: %.4f' % (acc / c))
-    return
+    return acc / c
 
 
 def run(args):
@@ -49,7 +50,7 @@ def run(args):
     # train_dataset = voc12.dataloader.VOC12ClassificationDataset(args.train_list, voc12_root=args.voc12_root,
     #                                                             resize_long=(320, 640), hor_flip=True,
     #                                                             crop_size=512, crop_method="random")
-    train_dataset = LiTS_dataset('/home/viplab/data/train5/', 'train', 
+    train_dataset = KiTS_dataset('/home/viplab/data/kits_train1/', 'train', 
                             transform=RandomGenerator_flip(output_size=[256, 256]), 
                             tumor_only=True)
     train_data_loader = DataLoader(train_dataset, batch_size=args.cam_batch_size,
@@ -57,7 +58,7 @@ def run(args):
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches
     # val_dataset = voc12.dataloader.VOC12ClassificationDataset(args.val_list, voc12_root=args.voc12_root,
     #                                                           crop_size=512)
-    val_dataset = LiTS_dataset('/home/viplab/data/val5/', 'train',  
+    val_dataset = KiTS_dataset('/home/viplab/data/kits_val1/', 'train',  
                             tumor_only=True)
     val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
@@ -68,12 +69,14 @@ def run(args):
         {'params': param_groups[1], 'lr': 10*args.cam_learning_rate, 'weight_decay': args.cam_weight_decay},
     ], lr=args.cam_learning_rate, weight_decay=args.cam_weight_decay, max_step=max_step)
 
-    loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.56))
+    # loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.56))
+    loss_func = torch.nn.BCEWithLogitsLoss(pos_weight=torch.tensor(2.67))
 
     model = torch.nn.DataParallel(model).cuda()
     model.train()
     avg_meter = pyutils.AverageMeter()
     timer = pyutils.Timer()
+    best_acc = 0
     for ep in range(args.cam_num_epoches):
         print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
         acc = 0
@@ -107,8 +110,12 @@ def run(args):
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
 
         else:
-            validate(model, val_data_loader)
+            val_acc = validate(model, val_data_loader)
+            if val_acc > best_acc:
+                best_acc = val_acc
+                print('save ep', ep, val_acc)
+                torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
             timer.reset_stage()
 
-    torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
+    # torch.save(model.module.state_dict(), args.cam_weights_name + '.pth')
     torch.cuda.empty_cache()

@@ -248,8 +248,8 @@ class Trainer(BaseTrainer):
 
     def inference(self, num_classes, model, epoch, test_save_path=None):
         # db_test = args.Dataset(base_dir=args.volume_path, split="test_vol", list_dir=args.list_dir)
-        db_test = LiTS_dataset('/home/viplab/data/stage1/test/', split='test_vol', tumor_only=True)
-        testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1)
+        db_test = KiTS_dataset('/home/viplab/data/kits_vols1/test/', split='test_vol', tumor_only=True)
+        testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=4)
         self.logger.info("{} test iterations per epoch".format(len(testloader)))
         model.eval()
         metric_list = 0.0
@@ -444,6 +444,49 @@ class LiTS_dataset(Dataset):
 
             image = image.astype(np.float32)
             image = image / 200
+
+            image = ndimage.zoom(image, (1, 0.5, 0.5), order=3)
+            label = ndimage.zoom(label, (1, 0.5, 0.5), order=0)
+
+        if self.tumor_only:
+            label = (label == 2).astype('float32')
+
+        sample = {'image': image, 'label': label}
+        if self.transform:
+            sample = self.transform(sample)
+        sample['case_name'] = self.sample_list_ct[idx][:-4]
+        return sample
+
+
+class KiTS_dataset(Dataset):
+    def __init__(self, base_dir, split, transform=None, tumor_only=False):
+        self.transform = transform  # using transform in torch!
+        self.split = split
+        self.sample_list_ct = os.listdir(base_dir + 'ct/')
+        self.sample_list_seg = os.listdir(base_dir + 'seg/')
+        self.sample_list_ct.sort()
+        self.sample_list_seg.sort()
+        self.data_dir = base_dir
+        self.tumor_only = tumor_only
+
+    def __len__(self):
+        return len(self.sample_list_ct)
+
+    def __getitem__(self, idx):
+        if self.split == "train":
+            image_path = self.data_dir + 'ct/' +  self.sample_list_ct[idx]
+            seg_path = self.data_dir + 'seg/' +  self.sample_list_seg[idx]
+            assert seg_path.replace('seg', 'ct') == image_path, (image_path, seg_path)
+            image = np.load(self.data_dir + 'ct/' +  self.sample_list_ct[idx])
+            label = np.load(self.data_dir + 'seg/' +  self.sample_list_seg[idx])
+        else:
+            ct = sitk.ReadImage(self.data_dir + 'ct/' + self.sample_list_ct[idx], sitk.sitkInt16)
+            seg = sitk.ReadImage(self.data_dir + 'seg/' + self.sample_list_seg[idx], sitk.sitkUInt8)
+            image = sitk.GetArrayFromImage(ct)
+            label = sitk.GetArrayFromImage(seg)
+
+            image = image.astype(np.float32) - 50
+            image = image / 250
 
             image = ndimage.zoom(image, (1, 0.5, 0.5), order=3)
             label = ndimage.zoom(label, (1, 0.5, 0.5), order=0)

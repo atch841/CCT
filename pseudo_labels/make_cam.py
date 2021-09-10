@@ -10,7 +10,7 @@ import os
 
 # import voc12.dataloader
 from misc import torchutils, imutils
-from dataset import LiTS_datasetMSF
+from dataset import KiTS_datasetMSF
 
 
 cudnn.enabled = True
@@ -102,7 +102,7 @@ def run(args):
 
     # dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
     #                                                          voc12_root=args.voc12_root, scales=args.cam_scales)
-    dataset = LiTS_datasetMSF('/home/viplab/data/train5/', 'train', scales=args.cam_scales)
+    dataset = KiTS_datasetMSF('/home/viplab/data/kits_train1/', 'train', scales=args.cam_scales)
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print('[ ', end='')

@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument("--cam_network", default="net.resnet50_cam", type=str)
     parser.add_argument("--cam_crop_size", default=512, type=int)
     parser.add_argument("--cam_batch_size", default=200, type=int)
-    parser.add_argument("--cam_num_epoches", default=40, type=int)
+    parser.add_argument("--cam_num_epoches", default=100, type=int)
     parser.add_argument("--cam_learning_rate", default=0.001, type=float)
     parser.add_argument("--cam_weight_decay", default=1e-4, type=float)
     parser.add_argument("--cam_eval_thres", default=0.15, type=float)
@@ -32,12 +32,12 @@ if __name__ == '__main__':
     parser.add_argument("--conf_bg_thres", default=0.05, type=float)
 
     # Output Path
-    parser.add_argument("--cam_weights_name", default="saved_new/res50_cam.pth", type=str)
-    parser.add_argument("--cam_out_dir", default="result_new/cam", type=str)
-    parser.add_argument("--pseudo_labels_out_dir", default="result_new/pseudo_labels", type=str)
+    parser.add_argument("--cam_weights_name", default="saved_kits/res50_cam.pth", type=str)
+    parser.add_argument("--cam_out_dir", default="result_kits/cam", type=str)
+    parser.add_argument("--pseudo_labels_out_dir", default="result_kits/pseudo_labels", type=str)
 
     args = parser.parse_args()
-    os.makedirs("saved_new", exist_ok=True)
+    os.makedirs("saved_kits", exist_ok=True)
     os.makedirs(args.cam_out_dir, exist_ok=True)
     os.makedirs(args.pseudo_labels_out_dir, exist_ok=True)
 

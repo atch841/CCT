@@ -1,4 +1,4 @@
-from dataset import LiTS_dataset
+from dataset import KiTS_dataset
 import os
 import numpy as np
 import imageio
@@ -56,7 +56,7 @@ def _work(process_id, infer_dataset, args):
 
 def run(args):
     # dataset = voc12.dataloader.VOC12ImageDataset(args.train_list, voc12_root=args.voc12_root, img_normal=None, to_torch=False)
-    dataset = LiTS_dataset('/home/viplab/data/train5/', 'train', 
+    dataset = KiTS_dataset('/home/viplab/data/kits_train1/', 'train', 
                             tumor_only=True)
     dataset = torchutils.split_dataset(dataset, args.num_workers)
 

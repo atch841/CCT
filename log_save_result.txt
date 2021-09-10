@@ -1,0 +1,30 @@
+2021-07-24 08:48:35 27 test iterations per epoch
+2021-07-24 08:48:45 idx 0 case volume-0 mean_dice 0.220436 mean_hd95 61.006555
+2021-07-24 08:48:54 idx 1 case volume-101 mean_dice 0.463951 mean_hd95 8.602325
+2021-07-24 08:49:00 idx 2 case volume-103 mean_dice 0.313219 mean_hd95 63.211547
+2021-07-24 08:49:05 idx 3 case volume-105 mean_dice 1.000000 mean_hd95 0.000000
+2021-07-24 08:49:12 idx 4 case volume-108 mean_dice 0.432129 mean_hd95 5.385165
+2021-07-24 08:49:19 idx 5 case volume-109 mean_dice 0.250317 mean_hd95 39.830892
+2021-07-24 08:49:26 idx 6 case volume-110 mean_dice 0.409932 mean_hd95 5.385165
+2021-07-24 08:49:34 idx 7 case volume-111 mean_dice 0.210625 mean_hd95 38.836191
+2021-07-24 08:49:40 idx 8 case volume-113 mean_dice 0.297705 mean_hd95 17.378147
+2021-07-24 08:49:47 idx 9 case volume-17 mean_dice 0.403008 mean_hd95 108.323575
+2021-07-24 08:49:54 idx 10 case volume-19 mean_dice 0.247350 mean_hd95 40.730824
+2021-07-24 08:50:00 idx 11 case volume-2 mean_dice 0.430826 mean_hd95 13.761506
+2021-07-24 08:50:06 idx 12 case volume-22 mean_dice 0.375203 mean_hd95 13.152946
+2021-07-24 08:50:14 idx 13 case volume-24 mean_dice 0.052679 mean_hd95 76.025962
+2021-07-24 08:50:21 idx 14 case volume-3 mean_dice 0.071212 mean_hd95 154.241044
+2021-07-24 08:50:26 idx 15 case volume-44 mean_dice 0.327596 mean_hd95 13.588587
+2021-07-24 08:50:35 idx 16 case volume-55 mean_dice 0.010919 mean_hd95 200.460220
+2021-07-24 08:50:43 idx 17 case volume-56 mean_dice 0.495627 mean_hd95 14.000000
+2021-07-24 08:50:52 idx 18 case volume-64 mean_dice 0.592584 mean_hd95 15.842980
+2021-07-24 08:51:00 idx 19 case volume-67 mean_dice 0.000000 mean_hd95 109.764901
+2021-07-24 08:51:06 idx 20 case volume-68 mean_dice 0.289658 mean_hd95 97.007719
+2021-07-24 08:51:12 idx 21 case volume-70 mean_dice 0.533114 mean_hd95 20.210142
+2021-07-24 08:51:21 idx 22 case volume-76 mean_dice 0.493482 mean_hd95 9.695360
+2021-07-24 08:51:28 idx 23 case volume-77 mean_dice 0.233089 mean_hd95 66.192144
+2021-07-24 08:51:36 idx 24 case volume-79 mean_dice 0.348389 mean_hd95 53.291650
+2021-07-24 08:51:42 idx 25 case volume-82 mean_dice 0.454287 mean_hd95 107.652218
+2021-07-24 08:51:50 idx 26 case volume-86 mean_dice 0.014831 mean_hd95 96.133757
+2021-07-24 08:51:50 -1 Mean class 1 mean_dice 0.332303 mean_hd95 53.693019
+2021-07-24 08:51:50 Testing performance in best val model: mean_dice : 0.332303 mean_hd95 : 53.693019
